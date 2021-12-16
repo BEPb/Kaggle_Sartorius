@@ -1,17 +1,37 @@
 '''
- Sartorius - Torch - Classifier + Mask R-CNN
+python 3.9 - kaggle sartorius - torch R-CNN (lb-0.28)
+Sartorius - Torch - Classifier + Mask R-CNN
+
+Version: 0.1
+Author: Andrej Marinchenko
+Date: 2021-12-16
+
+мы создаем базовую стартовую маску R-CNN с помощью pytorch.
+
+Предыдущая модель U-net, которая, как я ожидал, войдет в режим резких улучшений с быстрыми результатами,
+достигла потолка 0,03, какие бы изменения я ни внес. Пополнение данных, изменения в архитектуре и другие  изменения
+не помогли. Предположение о том, что семантическая сегментация не работает, кажется разумным, поскольку отдельные
+лица не могут быть разделены по связанным компонентам, поскольку они сильно перекрываются.
+
+
+Я не очень знаком с архитектурой, но мне кажется, что это самое современное искусство для «сегментации экземпляров».
+Он классифицирует людей, окружает их ограничивающими рамками и, что наиболее важно, предоставляет отдельную маску
+для каждого из них.
+
+Эта модель предсказывает разные маски для разных людей, а не уникальную маску для всего изображения, и,
+таким образом,  лучше решает проблему.
+
+В конце любой перекрывающийся пиксель удаляется, чтобы гарантировать неперекрывающуюся политику. Для U-net этого не
+требовалось, поскольку на выходе была только одна уникальная маска, и поэтому перекрытия не могло произойти.
 '''
 
 
 import os
-import time
 import random
-import collections
 
 import numpy as np
 import pandas as pd
 from PIL import Image
-import matplotlib.pyplot as plt
 
 import cv2
 import albumentations as A
@@ -19,9 +39,8 @@ from albumentations.pytorch import ToTensorV2
 
 import torch
 import torchvision
-from torchvision.transforms import ToPILImage
 from torchvision.transforms import functional as F
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 from torchvision.models.detection.mask_rcnn import MaskRCNNPredictor
 
@@ -35,9 +54,6 @@ def fix_all_seeds(seed):
 
 # Fix randomness
 fix_all_seeds(2021)
-
-
-
 
 # TRAIN_CSV = "../input/sartorius-cell-instance-segmentation/train.csv"
 TRAIN_CSV = r"C:\Users\andre\Downloads\sartorius-cell-instance-segmentation\train.csv"
@@ -66,6 +82,7 @@ df_train = pd.read_csv(TRAIN_CSV)
 
 # Simple statistics: number of instances per image per cell_type
 # We will use the values from this analysis to decide the number of predicted individuals to generate for each image
+
 # Простая статистика: количество экземпляров на изображение на тип ячейки
 # Мы будем использовать значения из этого анализа, чтобы определить количество прогнозируемых лиц, которые нужно
 # сгенерировать для каждого изображения.

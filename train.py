@@ -22,7 +22,7 @@ dir_img = Path(r'd:\05.temp\sartorius-cell-instance-segmentation\train')
 # dir_mask = Path('./data/masks/')
 dir_mask = Path(r'd:\05.temp\Binary_Mask_Dataset')
 # dir_checkpoint = Path('./checkpoints/')
-dir_checkpoint = Path(r'd:\05.temp\sartorius-cell-instance-segmentation')
+dir_checkpoint = Path(r'd:\05.temp\sartorius-cell-instance-segmentation\checkpoints')
 
 
 
